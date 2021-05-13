@@ -6,31 +6,37 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.studentapp.exception.CityNotFoundException;
+import com.studentapp.exception.IDNotFoundException;
+import com.studentapp.exception.StudentNotFoundException;
 import com.studentapp.model.Student;
 @Service
 public class StudentServiceImpl implements StudentService {
 
 	@Override
-	public List<Student> getStudentByCity(String city) {
+	public List<Student> getStudentByCity(String city) throws CityNotFoundException {
 		List<Student> studentList = 
 				studentDetails()
 				.stream()
 				.filter(student -> student.getCity().equals(city))
 				.collect(Collectors.toList());
+		if(studentList.isEmpty())
+			throw new CityNotFoundException("Student with this City not found ");
 		return studentList;
 	 }
 	@Override
-	public Student getStudentById(int id) {
+	public Student getStudentById(int id) throws IDNotFoundException {
 		return studentDetails()
 				.stream()
 				.filter(student -> student.getStudentId() == id)
 				.findFirst()
-				.orElse(new Student());
+				.orElseThrow(()-> new IDNotFoundException("Invalid Id"));
 	}
 	@Override
 	public List<Student> getAll() {
 		return studentDetails();
 	}
+	
 	private List<Student> studentDetails() {
 		return Arrays.asList(
 				new Student("Jack", 10, "Jaipur"), 
@@ -47,6 +53,8 @@ public class StudentServiceImpl implements StudentService {
 				.stream()
 				.filter(student -> student.getName().contains(start))
 				.collect(Collectors.toList());
+		if(studentList.isEmpty())
+			throw new StudentNotFoundException("Student with this name not found ");
 		return studentList;
 	}
 	@Override
@@ -54,9 +62,11 @@ public class StudentServiceImpl implements StudentService {
 		List<Student> studentList = 
 				studentDetails()
 				.stream()
-				.filter(student -> student.getCity().equals(city))
-				.filter(student -> student.getName().contains(start))
+				.filter(student -> 
+				    (student.getName().contains(start)&&student.getCity().equals(city)))
 				.collect(Collectors.toList());
+		if(studentList.isEmpty())
+			throw new StudentNotFoundException("Student with this name/city not found ");
 		return studentList;
 	}
 
